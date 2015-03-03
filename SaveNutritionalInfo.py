@@ -1,8 +1,8 @@
-import urllib.parse
-import urllib.request
+import urllib
+import urllib2
 import json
 import os
-#import MySQLdb
+import MySQLdb
 
 api_key = "jwUc1bdSRZafHuqAcQBpJ1u6d4SkNH9VU5UKeya5"
 search_url = r"http://api.nal.usda.gov/usda/ndb/search"
@@ -17,17 +17,17 @@ def saveNutrition(food_name, ndbno, nutrient_name, measure, unit, value):
     print("Value: " + value)
 
     #save to database
-    #conn = MySQLdb.connect(host= "mysql-user",
-    #                            user="depotte8",
-    #                            passwd="A36490765",
-    #                            db="depotte8")
-    #x = conn.cursor()
-    #try:
-    #    x.execute("""INSERT INTO NutritionInfo (ndbno, name, nutrient, measure, unit, value) VALUES (%s,%s,%s,%s,%s,%s)""",(ndbno, food_name, nutrient_name, measure, unit, value))
-    #    conn.commit()
-    #except Exception as e:
-    #    conn.rollback()
-    #conn.close()
+    conn = MySQLdb.connect(host= "mysql-user",
+                                user="depotte8",
+                                passwd="A36490765",
+                                db="depotte8")
+    x = conn.cursor()
+    try:
+        x.execute("""INSERT IGNORE INTO NutritionInfo (ndbno, name, nutrient, measure, unit, value) VALUES (%s,%s,%s,%s,%s,%s)""",(ndbno, food_name, nutrient_name, measure, unit, value))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+    conn.close()
 
 
 def fetchNutrition(ndbno):
@@ -35,12 +35,12 @@ def fetchNutrition(ndbno):
               'format' : 'json',
               'type' : 'b', # options: b-basic, f-full, s-stats
               'ndbno' : ndbno }
-    data = urllib.parse.urlencode(values)
+    data = urllib.urlencode(values)
         
-    req = urllib.request.Request(nutrition_url + "?" + data)
-    response = urllib.request.urlopen(req)
+    req = urllib2.Request(nutrition_url + "?" + data)
+    response = urllib2.urlopen(req)
     json_response = response.read()
-    json_response = json_response.decode()
+    #json_response = json_response.decode()
         
     result = json.loads(json_response)
         
@@ -58,13 +58,13 @@ def searchNutrition(searchString):
         values = {'api_key' : api_key,
                   'format' : 'json',
                   'q' : searchString }
-        data = urllib.parse.urlencode(values)
+        data = urllib.urlencode(values)
         #data = data.encode('utf-8')
         
-        req = urllib.request.Request(search_url + "?" + data)
-        response = urllib.request.urlopen(req)
+        req = urllib2.Request(search_url + "?" + data)
+        response = urllib2.urlopen(req)
         json_response = response.read()
-        json_response = json_response.decode()
+        #json_response = json_response.decode()
         
         result = json.loads(json_response)
         
@@ -76,5 +76,6 @@ def searchNutrition(searchString):
     except Exception as e:
         print(e)
 
-searchString = "mcdonalds hamburger"
-searchNutrition(searchString)
+searchStrings = ["hamburger", "steak", "french fries"]
+for search in searchStrings:
+	searchNutrition(search)
